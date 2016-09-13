@@ -24,6 +24,7 @@ local escape = function(q)
 	end
 	return q
 end
+
 -- Init parent
 local interpolate_query = base.init(escape)
 
