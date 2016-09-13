@@ -9,6 +9,48 @@
 local main_conf = require "conf.conf"
 local conf = main_conf.db[main_conf.sailor.environment]
 local mysql = require "resty.mysql"
+local base = require("sailor.db.base")
+
+-- Escapes a string or a table (its values). Should be used before concatenating strings on a query.
+-- @param q string or table: the string or table to be escaped
+-- @return string or nil: if q is a string, returns the new escaped string. If q is a table
+--							it simply returns, since it already escaped the table's values
+local escape = function(q)
+	local escape_string = function(s)
+		-- Based on luajson code
+		-- https://github.com/harningt/luajson/blob/master/lua/json/encode/strings.lua
+		local matches = {
+			['\\'] = '\\\\',    
+			["\0"] = '\\0',
+			["\n"] = '\\n',
+			["\r"] = '\\r',
+			["'"] = "\\'",
+			['"'] = '\\"',
+			["\x1a"] = '\\Z'
+		}
+		for i = 0, 255 do
+			local c = string.char(i)
+			if c:match('[%z\1-\031\128-\255]') and not matches[c] then
+				matches[c] = ('\\x%.2X'):format(i)
+			end
+		end
+		return s:gsub('[\\"/%z\1-\031\128-\255]', matches)
+	end
+
+	if type(q) == "string" then
+		q = escape_string(q)
+		return "'" .. q .. "'"
+ 	elseif type(q) == "table" then
+		for k,v in pairs(q) do
+			q[k] = escape_string(v)
+		end
+		return
+	end
+	return q
+end
+
+-- Init parent
+local interpolate_query = base.init(escape)
 
 local db = {instance = nil, transaction = false}
 
@@ -55,7 +97,7 @@ end
 function db.query(query)
 	local res, err, errno, sqlstate = db.instance:query(query)
     if not res then
-    	error(query)
+    	--error(query)
         error("Bad result: ".. err ..": ".. (errno or '') .." "..(sqlstate or ''))
     end
     return res
@@ -77,47 +119,6 @@ end
 -- @param table_name string: the name of the table to be truncated
 function db.truncate(table_name)
 	return db.query('truncate table ' .. table_name .. ';')
-end
-
--- Escapes a string or a table (its values). Should be used before concatenating strings on a query.
--- @param q string or table: the string or table to be escaped
--- @return string or nil: if q is a string, returns the new escaped string. If q is a table
---							it simply returns, since it already escaped the table's values
-
-local function escape_string(s)
-	-- Based on luajson code
-	-- https://github.com/harningt/luajson/blob/master/lua/json/encode/strings.lua
-	local matches = {
-		['\\'] = '\\\\',    
-		["\0"] = '\\0',
-		["\n"] = '\\n',
-		["\r"] = '\\r',
-		["'"] = "\\'",
-		['"'] = '\\"',
-		["\x1a"] = '\\Z'
-	}
-
-	for i = 0, 255 do
-		local c = string.char(i)
-		if c:match('[%z\1-\031\128-\255]') and not matches[c] then
-			matches[c] = ('\\x%.2X'):format(i)
-		end
-	end
-
-	return s:gsub('[\\"/%z\1-\031\128-\255]', matches)
-end
-
-function db.escape(q)
-	if type(q) == "string" then
-		q = escape_string(q)
-		return q
-	elseif type(q) == "table" then
-		for k,v in pairs(q) do
-			q[k] = escape_string(v)
-		end
-		return
-	end
-	return q
 end
 
 -- Starts a transation
@@ -152,7 +153,7 @@ end
 
 -- Checks if a table exists
 function db.table_exists(table_name)
-	local query = "SHOW TABLES LIKE '"..db.escape(table_name).."';"
+	local query = "SHOW TABLES LIKE "..db.escape(table_name)..";"
 	local res = db.query_one(query)
 	return res == table_name
 end
@@ -170,7 +171,7 @@ function db.get_columns(table_name)
 
 	table_name = db.escape(table_name)
 
-	local query = "SELECT column_name, column_key FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '"..table_name.."';"
+	local query = "SELECT column_name, column_key FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = "..table_name..";"
 	local res = db.query(query)
 	local helper = require "tests.helper"
 	for _,v in ipairs(res) do
@@ -180,6 +181,22 @@ function db.get_columns(table_name)
 	
 	
 	return columns, key
+end
+
+-- Escapes a string for use in a query as column or table name.
+-- @param table_name string: the name of the table
+function db.escape_table(table_name)
+	return table_name
+end
+
+-- Only for compat
+db.escape = function(q)
+	return escape(q)
+end
+
+-- Only for test
+db.interpolate_query = function(query, ...)
+	return interpolate_query(query,...)
 end
 return db
 

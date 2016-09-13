@@ -10,7 +10,6 @@ local helper = require "tests.helper"
 
 
 describe("Testing #Autogen", function()
-
   it("should not open autogen page", function()
  	  conf.sailor.enable_autogen = false
     local res = test.request('autogen')
@@ -60,5 +59,4 @@ describe("Testing #Autogen", function()
   		 assert.truthy(lfs.attributes(f))
   	end
   end)
-
 end)

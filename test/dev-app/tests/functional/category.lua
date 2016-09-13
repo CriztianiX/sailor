@@ -86,6 +86,4 @@ describe("Testing #CategoryController", function()
     assert.same(count_before, Category:count())
     assert.truthy(res.body:match('Error'))
   end)
-
 end)
---]]

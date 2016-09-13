@@ -11,6 +11,7 @@ local conf = main_conf.db[main_conf.sailor.environment]
 local luasql = require("luasql."..conf.driver)
 local db = { transaction = false}
 local utils = require "web_utils.utils"
+local base = require("sailor.db.base")
 
 -- Reads the cursor information after reading from db and returns a table
 local function fetch_row(cur, res)
@@ -36,6 +37,25 @@ local function fetch_row(cur, res)
 	return fetch_row(cur,res)
 end
 
+
+-- Escapes a string or a table (its values). Should be used before concatenating strings on a query.
+-- @param q string or table: the string or table to be escaped
+-- @return string or nil: if q is a string, returns the new escaped string. If q is a table
+--							it simply returns, since it already escaped the table's values
+function escape(q)
+	if type(q) == "string" then
+		return "'" .. tostring(db.con:escape(q)) .. "'"
+	elseif type(q) == "table" then
+		for k,v in pairs(q) do
+			q[k] = db.con:escape(v)
+		end
+		return
+	end
+	return q
+end
+
+-- Init parent
+local interpolate_query = base.init(escape)
 -- Creates the connection of the instance
 function db.connect()
 	if db.transaction then return end
@@ -53,7 +73,13 @@ end
 -- Runs a query
 -- @param query string: the query to be executed
 -- @return table: the rows with the results
-function db.query(query)
+function db.query(query, ...)
+	local query = interpolate_query(query, ...)
+	--print(query)
+	--print("chau")
+	--os.exit()
+	  --print(debug.traceback())
+	 --print(query)
 	local cur = assert(db.con:execute(query))
 	if type(cur) == 'number' then
 		return cur
@@ -64,8 +90,8 @@ end
 -- Runs a query and get one single value
 -- @param query string: the query to be executed
 -- @return string | number: the result
-function db.query_one(query)
-	local res = db.query(query)
+function db.query_one(query, ...)
+	local res = db.query(query, ...)
 	local value
 	if next(res) then
 		for _,v in pairs(res[1]) do value = v end
@@ -84,28 +110,11 @@ function db.truncate(table_name)
 		db.query(query)
 		query = "delete from sqlite_sequence where name='" .. table_name .. "';"
 	else 
-		query = 'truncate table ' .. table_name .. ';'
+		return db.query("truncate table "..table_name)
 	end
-	return db.query(query)
-end
 
--- Escapes a string or a table (its values). Should be used before concatenating strings on a query.
--- @param q string or table: the string or table to be escaped
--- @return string or nil: if q is a string, returns the new escaped string. If q is a table
---							it simply returns, since it already escaped the table's values
-function db.escape(q)
-	if type(q) == "string" then
-		q = db.con:escape(q)
-		return q
-	elseif type(q) == "table" then
-		for k,v in pairs(q) do
-			q[k] = db.con:escape(v)
-		end
-		return
-	end
-	return q
+	return db.query(query, table_name)
 end
-
 
 --- Runs two queries and returns the result of the second query.
 -- It is no longer in use. It was used by sailor.model to insert and obtain the last id.
@@ -194,16 +203,15 @@ end
 -- @param table_name string: the name of the table
 -- @return boolean
 function db.table_exists(table_name)
-	table_name = db.escape(table_name)
 	local query
  	if conf.driver == 'postgres' then 
- 		query = "SELECT relname FROM pg_class WHERE relname = '"..table_name.."';" 	
+ 		query = "SELECT relname FROM pg_class WHERE relname = ?;" 	
 	elseif conf.driver == 'sqlite3' then
-    	query = "SELECT name FROM sqlite_master WHERE type='table' AND name='"..table_name.."';"
+    	query = "SELECT name FROM sqlite_master WHERE type='table' AND name = ?;"
  	else
-    	query = "SHOW TABLES LIKE '"..table_name.."';"
+    	query = "SHOW TABLES LIKE ?;"
 	end
-	local res = db.query_one(query)
+	local res = db.query_one(query, table_name)
 	return res == table_name
 end
 
@@ -250,7 +258,7 @@ function db.get_columns(table_name)
 	if not db.table_exists(table_name) then 
 		return columns, key 
 	end
-	table_name = db.escape(table_name)
+	--table_name = db.escape(table_name)
 
  	if conf.driver == 'postgres' then 
  		return get_columns_pg(table_name)
@@ -259,9 +267,8 @@ function db.get_columns(table_name)
 		return get_columns_sqlite3(table_name)
  	end
 
-	local query = "SELECT column_name, column_key FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '"..table_name.."';"
-	
-	local res = db.query(query)
+	local query = "SELECT column_name, column_key FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = ?;"	
+	local res = db.query(query, table_name)
 	
 	for _,v in ipairs(res) do
 		if v.column_key == 'PRI' then key = v.column_name end
@@ -270,6 +277,22 @@ function db.get_columns(table_name)
 	
 	
 	return columns, key
+end
+
+-- Escapes a string for use in a query as column or table name.
+-- @param table_name string: the name of the table
+function db.escape_table(table_name)
+	return table_name
+end
+
+-- Only for keep compat
+db.escape = function(q)
+	return escape(q)
+end
+
+-- Only for test
+db.interpolate_query = function(query, ...)
+	return interpolate_query(query, ...)
 end
 
 return db

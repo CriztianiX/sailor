@@ -4,7 +4,6 @@ local User = require "sailor.model"('user')
 local fixtures = require "tests.fixtures.user" or {}
 
 describe("Testing #UserController", function()
-  
   local users
 
   it("should know no one has logged in", function()
@@ -64,5 +63,4 @@ describe("Testing #UserController", function()
     assert.is_false(access.login('admin','demon'))
     assert.is_true(access.is_guest())
   end)
-  
 end)

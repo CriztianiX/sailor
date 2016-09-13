@@ -269,5 +269,4 @@ describe("Testing #UserModel", function()
     assert.is_equal(Post:count(),count_post+1)
     assert_db_close(2)
   end)
-
 end)
