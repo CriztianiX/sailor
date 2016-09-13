@@ -151,16 +151,14 @@ function model:insert()
 				elseif type(self[attr]) == 'boolean' then
 					table.insert(values,tostring(self[attr]))
 				else
-					table.insert(values,"'"..db.escape(self[attr]).."'")
+					table.insert(values,db.escape(self[attr]))
 				end
 			end
 		end
 	end
 	local attr_string = table.concat (attrs, ',')
 	local value_string = table.concat (values, ',')
-
 	local query = "insert into "..self.db.table.."("..attr_string..") values ("..value_string..")"
-
 	local id = db.query_insert(query,self.db.key)
 	self[self.db.key] = id
 	db_close()
@@ -183,7 +181,7 @@ function model:update()
 			elseif type(self[attr]) == 'boolean' then
 				string = string..tostring(self[attr])
 			else
-				string = string.."'"..db.escape(self[attr]).."'"
+				string = string..db.escape(self[attr])
 			end
 			table.insert(updates,string)
 		end
@@ -200,7 +198,7 @@ end
 function model:find_by_id(id)
 	if not id then return nil end
 	db_connect()
-	local res = db.query("select * from "..self.db.table.." where "..self.db.key.."='"..db.escape(id).."';")
+	local res = db.query("select * from "..self.db.table.." where "..self.db.key.."="..db.escape(id)..";")
 	db_close()
 
 	if res and next(res) then return sailor.model(self["@name"]):new(res[1]) end
@@ -216,7 +214,7 @@ local function build_attributes_query(attributes)
             where = where..' and '
         end
         v = db.escape(v)
-        where = where..k.." = '"..v.."' "
+        where = where..k.." = "..v.." "
         n = n+1
     end
 
@@ -293,7 +291,7 @@ function model:delete()
 	db_connect()
 	local id = self[self.db.key]
 	--if id and self:find_by_id(id) then
-		local d = (db.query("delete from "..self.db.table.." where "..self.db.key.."='"..db.escape(id).."';") ~= 0)
+		local d = (db.query("delete from "..self.db.table.." where "..self.db.key.."="..db.escape(id)..";") ~= 0)
 		db_close()
 		return d
 	--end

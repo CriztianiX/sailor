@@ -2,7 +2,6 @@ local db = require "sailor.db"
 local helper = require "tests.helper"
 
 describe("Testing db module", function()
-
 	local fixtures = require "tests.fixtures.post"
 	local count = #fixtures
 
@@ -91,5 +90,4 @@ describe("Testing db module", function()
 		assert.same(0,#columns)
 		assert.same(nil,key)
 	end)
-
 end)

@@ -13,8 +13,14 @@ local remy = require "remy"
 local function detect()
 	if conf == nil then error("DB environment not found.") return end
 	local m
-	if remy.detect() == remy.MODE_NGINX and conf.driver == "mysql" then
-		m = require "sailor.db.resty_mysql"
+	if remy.detect() == remy.MODE_NGINX then
+		if conf.driver == "mysql" then
+			m = require "sailor.db.resty_mysql"
+		elseif conf.driver == "postgres" then
+			m = require "sailor.db.resty_postgres"
+		else
+			m = require "sailor.db.luasql_common"	
+		end
 	else
 		m = require "sailor.db.luasql_common"
 	end
