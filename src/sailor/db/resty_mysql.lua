@@ -94,7 +94,8 @@ end
 -- Runs a query
 -- @param query string: the query to be executed
 -- @return table: a cursor
-function db.query(query)
+function db.query(query, ...)
+	query = interpolate_query(query, ...)
 	local res, err, errno, sqlstate = db.instance:query(query)
     if not res then
     	--error(query)
@@ -106,8 +107,8 @@ end
 -- Runs a query and get one single value
 -- @param query string: the query to be executed
 -- @return string | number: the result
-function db.query_one(query)
-	local res = db.query(query)
+function db.query_one(query, ...)
+	local res = db.query(query, ...)
 	local value
 	if next(res) then
 		for _,v in pairs(res[1]) do value = v end

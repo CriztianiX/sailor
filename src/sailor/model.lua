@@ -290,13 +290,10 @@ end
 function model:delete()
 	db_connect()
 	local id = self[self.db.key]
-	--if id and self:find_by_id(id) then
-		local d = (db.query("delete from "..self.db.table.." where "..self.db.key.."="..db.escape(id)..";") ~= 0)
-		db_close()
-		return d
-	--end
-	--db_close()
-	--return false
+	local query = "DELETE FROM "..db.escape_table(self.db.table).." where "..self.db.key.." = ?"
+	local d = (db.query(query, id) ~= 0)
+	db_close()
+	return d
 end
 
 -- Verifies if object attributes comply to specified rules on model
