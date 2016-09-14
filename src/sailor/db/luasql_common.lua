@@ -75,11 +75,6 @@ end
 -- @return table: the rows with the results
 function db.query(query, ...)
 	local query = interpolate_query(query, ...)
-	--print(query)
-	--print("chau")
-	--os.exit()
-	  --print(debug.traceback())
-	 --print(query)
 	local cur = assert(db.con:execute(query))
 	if type(cur) == 'number' then
 		return cur
@@ -283,6 +278,13 @@ end
 -- @param table_name string: the name of the table
 function db.escape_table(table_name)
 	return table_name
+end
+
+-- Gets instance for db
+-- @return table_name
+function db.get_instance()
+    db.connect()
+    return db
 end
 
 -- Only for keep compat

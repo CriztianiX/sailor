@@ -190,6 +190,14 @@ function db.escape_table(table_name)
 	return table_name
 end
 
+-- Gets instance for db
+-- @return table_name
+function db.get_instance()
+  db.instantiate()
+  db.connect()
+  return db
+end
+
 -- Only for compat
 db.escape = function(q)
 	return escape(q)
