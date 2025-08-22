@@ -28,7 +28,7 @@ local httpd = {}
 -- Cross-environment compatible launcher. Makes Sailor adapt to
 -- different web server environments
 function sailor.launch(native_request)
-    if apr_table ~= nil then
+    if type(apache2) == "table" then
         -- This is Apache with mod_lua
         -- Sets a handle function to be called by mod_lua
         httpd = apache2
