@@ -465,4 +465,13 @@ function model:count()
 	return tonumber(res)
 end
 
+-- Execute a native query
+-- query_string, The SQL native query
+function model:query(query_string)
+	db_connect()
+	local d = (db.query(query_string))
+	db_close()
+	return d
+end
+
 return model
