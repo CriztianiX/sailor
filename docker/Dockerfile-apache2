@@ -1,0 +1,11 @@
+FROM httpd:2.4.65
+
+RUN apt-get update && \
+    apt-get install -y lua5.2 liblua5.2-dev luarocks git default-libmysqlclient-dev
+
+RUN luarocks install sailor && \
+    luarocks install inspect && \
+    luarocks install luasql-mysql MYSQL_INCDIR=/usr/include/mysql
+
+ADD ./httpd.conf /usr/local/apache2/conf/httpd.conf
+

@@ -11,9 +11,6 @@
 [![Join the chat at https://gitter.im/sailorproject/sailor](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sailorproject/sailor?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Twitter Follow](https://img.shields.io/twitter/follow/sailor_lua.svg?style=social)](https://twitter.com/sailor_lua)
 
 
-# [WE ARE LOOKING FOR NEW MAINTAINERS!](https://github.com/sailorproject/sailor/issues/173) 
-
-
 ### Features
   * Compatible with Lua 5.1, Lua 5.2 and LuaJIT. (5.3 compatibility so far untested)
   * Luarocks setup
@@ -63,6 +60,7 @@ More about the motivation to build this project can be found here: http://etiene
 Sailor has been tested under Linux, Mac OS X and Windows and is currently compatible with Apache with [mod_lua](http://www.modlua.org/) or [mod_pLua](https://github.com/Humbedooh/mod_pLua), Nginx with [ngx_lua](https://github.com/openresty/lua-nginx-module), [Lwan](http://lwan.ws/), Lighttpd with [mod_magnet](http://redmine.lighttpd.net/projects/1/wiki/Docs_ModMagnet), or any CGI-enabled web server, like [Civetweb](https://github.com/civetweb/civetweb), [Mongoose](https://github.com/cesanta/mongoose) and [Xavante](http://keplerproject.github.io/xavante/), if [CGILua](https://github.com/keplerproject/cgilua) is present.
 
 ### Installation
+The recommended way to install Sailor is by using the Dockerfiles located in the docker/ directory.
 
 For Linux, see [INSTALL_LINUX.md](https://github.com/sailorproject/sailor/blob/master/docs/INSTALL_LINUX.md) (Ubuntu) or [INSTALL_LINUX_ARCH.md](https://github.com/sailorproject/sailor/blob/master/docs/INSTALL_LINUX_ARCH.md) (Arch Linux)
 
