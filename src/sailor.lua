@@ -174,6 +174,10 @@ function sailor.route(page)
             controller, action = match(route_name, "([^/]+)/?([^/]*)")
         end
 
+        if action == 'before_filter' then
+            return error_404()
+        end
+
         if controller == "autogen" then 
             if conf.sailor.enable_autogen then
                 local _,res = xpcall(function () autogen(page) end, error_handler)
@@ -195,7 +199,13 @@ function sailor.route(page)
             if not ctr[action] then return error_404() end
 
             -- run action
-            _, res = xpcall(function() return ctr[action](page) end, error_handler)
+            _, res = xpcall(function()
+                if type(ctr.before_filter) == 'function' then
+                    ctr.before_filter()
+                end
+
+                return ctr[action](page)
+            end, error_handler)
             if res == 404 then return error_404() end
         end
 
